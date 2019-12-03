@@ -4,3 +4,5 @@
 !*.zip
 !*.py
 !*.ipynb
+!README.m
+!.gitignore
