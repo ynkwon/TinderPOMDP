@@ -1,4 +1,3 @@
-
 from random import random
 import itertools
 import math
