@@ -46,17 +46,13 @@ def get_cont_prob(attr):
     else:
         return 1 - norm.cdf((9.5 - mdp.candidate_mean) / mdp.candidate_std) 
     
-
-
 def transition(mdp, s, a, s_next):
     prob = 1
     
     if s_next[2] != s[2] - 1:
-        print(1)
         return 0
     
     if s_next[3] != (s[3] - (a == 'like')):
-        print(2)
         return 0
 
     # candidate attraction probabilities via normal distrib
@@ -72,7 +68,6 @@ def transition(mdp, s, a, s_next):
             possibility_size += min(possibility_size, mdp.attr_range - s[0])
             prob *= 1 / possibility_size
         else: 
-            print(3)
             prob *= 0
     return prob
 
@@ -110,13 +105,9 @@ def updatebelief(mdp, b, a, o, remaining_h, remaining_l):
             o_prob = observation(mdp, a, o, s)
             for next_attr in itertools.product(range(1, mdp.attr_range + 1), repeat=2):
                 s_next = [next_attr[0], next_attr[1], remaining_h - 1, remaining_l - (a == 'like')]
-                #print("s is: ", s)
-                #print("s_next is: ", s_next)
-                #print("transition is ", transition(mdp, s, a, s_next))
                 sums += transition(mdp, s, a, s_next) * b[s_next[0]-1]
-        newB.append(get_cont_prob(j)* o_prob * sums)
+        newB.append(get_cont_prob(j) * o_prob * sums)
         
-    print("newB before normalization: ", newB)
     newB = [float(i) / sum(newB) for i in newB] # normalize
     return newB
 
@@ -152,5 +143,9 @@ if __name__ == "__main__":
     print("changeprofile, horizon 400" , alpha)
     #print(sum(i * j for i, j in zip(alpha, b)))
     
-    newb = updatebelief(mdp, b, 'like', 'unmatched', 500, 100)
-    print("after updating belief: ", newb)
+    #b = updatebelief(mdp, b, 'like', 'unmatched', 500, 100)
+    #print("after updating belief with like: ", b)
+    
+    newb = updatebelief(mdp, b, 'changeprofile', 'unmatched', 499, 99)
+    print("after updating belief with changeprofile: ", newb)
+
