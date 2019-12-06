@@ -248,12 +248,12 @@ def choose_max_utility_action(mdp, b, candidate_attr, remaining_h, remaining_l, 
 
 def choose_greedy_action(mdp, b, candidate_attraction, remaining_h, remaining_l, reward):
     candidate_attr = mdp.state[1]
-    if candidate_attr > 7:
+    if candidate_attr > 5:
         return 'like', -1
-    elif candidate_attr < 4:
-        return 'dislike', -1
+    # elif candidate_attr < 4:
+    #     return 'changeprofile', -1
     else:
-        return 'changeprofile', -1
+        return 'dislike', -1
           
 def choose_recursive_action_temporary(mdp, b, candidate_attr, remaining_h, remaining_l, reward, depth=1, gamma=0.8):
     if depth == 0 or remaining_h == 1 or remaining_l == 1:
@@ -318,7 +318,10 @@ def choose_recursive_action(mdp, b, candidate_attr, remaining_h, remaining_l, re
         if u > u_max:
             a_max, u_max = a, u
     return a_max, u_max
-        
+
+
+def score_matches(mytrueattr, matches):
+    return sum([matches[i] / (math.log(mytrueattr, 10) + 1) for i in range(len(matches))])
     
 if __name__ == "__main__":
     
@@ -326,20 +329,24 @@ if __name__ == "__main__":
 
     mdp = TinderMDP()
     test_data = generate_candidates(mdp.h)
-    true_myattr = 7
+    true_myattr = 3
     
     #b
-    init_b = initbelief(mdp)
-    init_b = [1,0,0,0,0,0,0,0,0,0]
-    init_b = [0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.91]
+    uniform_b = initbelief(mdp)
+    low_b = [0.1,0.8,0.09,0.01,0.01,0.01,0.01,0.01,0.01,0.01]
+    high_b = [0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.09,0.8,0.1]
+    init_b = uniform_b
     print("initial belief:", init_b)
     
-    total_reward, total_matches, actions, matches, beliefs = simulate_MDP(mdp, true_myattr, choose_random_action, init_b, immediate_reward, test_data)
+    total_reward, total_matches, actions, matches, beliefs = simulate_MDP(mdp, true_myattr, choose_greedy_action, high_b, immediate_reward, test_data)
     
     print("myattr: ", true_myattr, "action: max_utility, b: ", init_b, " total_reward: ", total_reward, " total_matches: ", total_matches)
     
-    fn = "random_myattr{}_{}_".format(true_myattr, "higher")
+    matches_score = score_matches(true_myattr, matches)
+    print("total_matches_score: ", matches_score)
+    
+    fn = "greedy_myattr{}_{}_".format(true_myattr, "higher")
     np.save(fn + "actions.npy", actions)
     np.save(fn + "matches.npy", matches)
     np.save(fn + "beliefs.npy", beliefs)
-    np.save(fn + "reward_and_init", [total_reward] + init_b)
+    np.save(fn + "rewards_and_init", [total_reward, matches_score] + init_b)
