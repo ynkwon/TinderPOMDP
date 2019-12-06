@@ -1,4 +1,3 @@
-
 from random import random
 import itertools
 import math
@@ -64,8 +63,9 @@ def transition(mdp, s, a, s_next):
     else:
         if abs(s_next[0] - s[0]) <= mdp.attr_change_range:
             possibility_size = 1 # number of possible values to change to including self
-            possibility_size += min(possibility_size, s[0] - 1)
-            possibility_size += min(possibility_size, mdp.attr_range - s[0])
+            possibility_size += min(mdp.attr_change_range, s[0] - 1)
+            possibility_size += min(mdp.attr_change_range, mdp.attr_range - s[0])
+                        
             prob *= 1 / possibility_size
         else: 
             prob *= 0
@@ -101,12 +101,12 @@ def updatebelief(mdp, b, a, o, remaining_h, remaining_l):
     for i in range(1, mdp.attr_range + 1):
         sums = 0
         for j in range(1, mdp.attr_range + 1):  
-            s = [i, j, remaining_h, remaining_l]
-            o_prob = observation(mdp, a, o, s)
+            s_next = [i, j, remaining_h - 1, remaining_l - (a == 'like')]
+            o_prob = observation(mdp, a, o, s_next)
             for next_attr in itertools.product(range(1, mdp.attr_range + 1), repeat=2):
-                s_next = [next_attr[0], next_attr[1], remaining_h - 1, remaining_l - (a == 'like')]
-                sums += transition(mdp, s, a, s_next) * b[s_next[0]-1]
-        newB.append(get_cont_prob(j) * o_prob * sums)
+                s = [next_attr[0], next_attr[1], remaining_h, remaining_l]
+                sums += get_cont_prob(j) * transition(mdp, s, a, s_next) * b[s[0]-1]
+        newB.append(o_prob * sums)
         
     newB = [float(i) / sum(newB) for i in newB] # normalize
     return newB
@@ -123,29 +123,35 @@ def alphavector(mdp, a, remaining_h, remaining_l, reward):
         alpha.append(reward_for_attr)
     return alpha
 
-
-
+def testGivenResult:
+    
+    
+    
+    
     
 if __name__ == "__main__":
     
     mdp = TinderMDP()
     b = initbelief(mdp)
+    # b = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
     
     print(mdp.actions)
+    print("initial belief")
     print(b)
     
-    alpha = alphavector(mdp, 'like', 400, 100, immediate_reward)
-    print("like, horizon 400", alpha)
-    print(sum(i * j for i, j in zip(alpha, b)))
+#     alpha = alphavector(mdp, 'like', 400, 100, immediate_reward)
+#     print("like, horizon 400", alpha)
+#     print(sum(i * j for i, j in zip(alpha, b)))
 
-    alpha = alphavector(mdp, 'changeprofile', 400, 100, immediate_reward)
-    #alpha = alphavector(mdp, 'dislike', 500, 100)
-    print("changeprofile, horizon 400" , alpha)
+#     alpha = alphavector(mdp, 'changeprofile', 400, 100, immediate_reward)
+#     #alpha = alphavector(mdp, 'dislike', 500, 100)
+#     print("changeprofile, horizon 400" , alpha)
     #print(sum(i * j for i, j in zip(alpha, b)))
     
     #b = updatebelief(mdp, b, 'like', 'unmatched', 500, 100)
     #print("after updating belief with like: ", b)
     
     newb = updatebelief(mdp, b, 'changeprofile', 'unmatched', 499, 99)
-    print("after updating belief with changeprofile: ", newb)
+    print("after updating belief with changeprofile: ")
+    print(newb)
 
